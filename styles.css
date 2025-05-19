@@ -1,0 +1,30 @@
+body {
+    background-color: powderblue;
+    font-family: Black Han Sans;
+
+}
+h1   {
+    color: blue;
+}
+h2   {color: green;}
+p    {color: red;}
+a:link {
+color: green;
+background-color: transparent;
+text-decoration: none;
+}
+a:visited {
+color: pink;
+background-color: transparent;
+text-decoration: none;
+}
+a:hover {
+color: rgb(0, 225, 255);
+background-color: transparent;
+text-decoration: underline;
+}
+a:active {
+color: yellow;
+background-color: transparent;
+text-decoration: underline;
+}
