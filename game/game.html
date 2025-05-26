@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>정확한 애니메이션 사다리 타기</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f0f4f8;
+      text-align: center;
+      padding: 40px;
+    }
+    input {
+      padding: 6px;
+      margin: 5px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    button {
+      padding: 10px 20px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 16px;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+    button:hover {
+      background-color: #45a049;
+    }
+    .ladder {
+      display: flex;
+      justify-content: center;
+      margin-top: 40px;
+      gap: 0;
+      position: relative;
+      height: 400px;
+      border: 1px solid #ccc;
+    }
+    .column {
+      position: relative;
+      width: 100px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .start, .end {
+      font-weight: bold;
+      margin: 8px 0;
+      cursor: pointer;
+    }
+    .line {
+      width: 2px;
+      background-color: #333;
+      height: 400px;
+      position: relative;
+      overflow: visible;
+    }
+    .rung {
+      height: 2px;
+      background-color: #333;
+      position: absolute;
+      left: 100%;
+      width: 100px;
+    }
+    .dot {
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background-color: red;
+      position: absolute;
+      z-index: 100;
+      transition: top 0.3s, left 0.3s;
+    }
+    .result {
+      font-size: 20px;
+      margin-top: 20px;
+      color: #FF5722;
+    }
+  </style>
+</head>
+<body>
+  <h1>🪜 사다리 타기</h1>
+  <div>
+    <label>세로줄 수 (3~5):</label>
+    <input type="number" id="lineCount" value="3" min="3" max="5"><br>
+
+    <label>출발지 이름 (쉼표 구분):</label><br>
+    <input type="text" id="startNames" value="나,너,친구"><br>
+
+    <label>도착지 이름 (쉼표 구분):</label><br>
+    <input type="text" id="endNames" value="피자,선물,꽝"><br>
+
+    <label>가로줄 층 수:</label>
+    <input type="number" id="ladderHeight" value="8" min="5" max="9"><br>
+
+    <button onclick="startGame()">사다리 생성</button>
+  </div>
+  <div id="ladderArea" class="ladder"></div>
+  <div class="result" id="result"></div>
+
+  <script>
+    let ladderData = [];
+    let finalEnds = [];
+    let startNames = [];
+    let endNames = [];
+
+    function shuffle(arr) {
+      for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+    }
+
+    function startGame() {
+      const lineCount = parseInt(document.getElementById("lineCount").value);
+      const height = parseInt(document.getElementById("ladderHeight").value);
+      startNames = document.getElementById("startNames").value.split(",").map(v => v.trim());
+      endNames = document.getElementById("endNames").value.split(",").map(v => v.trim());
+
+      if (startNames.length !== lineCount || endNames.length !== lineCount) {
+        alert("출발지와 도착지 이름 개수는 세로줄 수와 같아야 합니다.");
+        return;
+      }
+
+      finalEnds = [...endNames];
+      shuffle(finalEnds);
+      ladderData = [];
+
+      for (let i = 0; i < height; i++) {
+        const row = new Array(lineCount - 1).fill(false);
+        const rand = Math.floor(Math.random() * row.length);
+        row[rand] = true;
+        ladderData.push(row);
+      }
+
+      drawLadder(height, lineCount);
+    }
+
+    function drawLadder(height, lineCount) {
+      const ladderArea = document.getElementById("ladderArea");
+      ladderArea.innerHTML = "";
+
+      for (let i = 0; i < lineCount; i++) {
+        const col = document.createElement("div");
+        col.className = "column";
+
+        const start = document.createElement("div");
+        start.className = "start";
+        start.innerText = startNames[i];
+        start.onclick = () => animatePath(i, height);
+        col.appendChild(start);
+
+        const line = document.createElement("div");
+        line.className = "line";
+        line.id = `line-${i}`;
+        col.appendChild(line);
+
+        const end = document.createElement("div");
+        end.className = "end";
+        end.innerText = finalEnds[i];
+        col.appendChild(end);
+
+        ladderArea.appendChild(col);
+      }
+
+      for (let r = 0; r < ladderData.length; r++) {
+        for (let c = 0; c < ladderData[r].length; c++) {
+          if (ladderData[r][c]) {
+            const leftLine = document.getElementById(`line-${c}`);
+            const rung = document.createElement("div");
+            rung.className = "rung";
+            rung.style.top = `${r * 40}px`;
+            leftLine.appendChild(rung);
+          }
+        }
+      }
+
+      document.getElementById("result").innerText = "";
+    }
+
+    function getLineCenterX(index) {
+      const lineEl = document.getElementById(`line-${index}`);
+      const ladderEl = document.getElementById("ladderArea");
+      const lineRect = lineEl.getBoundingClientRect();
+      const ladderRect = ladderEl.getBoundingClientRect();
+      return lineRect.left - ladderRect.left + lineRect.width / 2;
+    }
+
+    async function animatePath(startIndex, height) {
+      const ladderArea = document.getElementById("ladderArea");
+      const dot = document.createElement("div");
+      dot.className = "dot";
+      ladderArea.appendChild(dot);
+
+      let x = getLineCenterX(startIndex);
+      let y = 0;
+
+      dot.style.left = `${x}px`;
+      dot.style.top = `${y}px`;
+
+      let pos = startIndex;
+
+      for (let i = 0; i < height; i++) {
+        await sleep(300);
+        y += 40;
+        dot.style.top = `${y}px`;
+
+        if (pos < ladderData[i].length && ladderData[i][pos]) {
+          await sleep(300);
+          x = getLineCenterX(pos + 1);
+          dot.style.left = `${x}px`;
+          pos++;
+        } else if (pos > 0 && ladderData[i][pos - 1]) {
+          await sleep(300);
+          x = getLineCenterX(pos - 1);
+          dot.style.left = `${x}px`;
+          pos--;
+        }
+      }
+
+      document.getElementById("result").innerText = `🎉 결과: ${finalEnds[pos]}`;
+    }
+
+    function sleep(ms) {
+      return new Promise(resolve => setTimeout(resolve, ms));
+    }
+  </script>
+</body>
+</html>
