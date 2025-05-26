@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>발표 순서 정하기</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="container">
+    <h1>발표 순서 정하기</h1>
+    <textarea id="nameInput" placeholder="이름을 줄마다 입력해 주세요"></textarea>
+    <button onclick="assignGroups()">순서 정하기</button>
+    
+    <div class="results">
+      <div class="group">
+        <h2>그룹 A</h2>
+        <ul id="groupAList"></ul>
+      </div>
+      <div class="group">
+        <h2>그룹 B</h2>
+        <ul id="groupBList"></ul>
+      </div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
