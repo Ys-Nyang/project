@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>커스텀 사다리 게임</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      text-align: center;
+      padding: 30px;
+    }
+    input {
+      margin: 5px;
+      padding: 5px;
+    }
+    button {
+      margin: 10px;
+      padding: 10px 20px;
+      font-size: 16px;
+    }
+    pre {
+      font-family: monospace;
+      margin-top: 20px;
+      line-height: 1.4;
+    }
+    .result {
+      font-size: 20px;
+      color: #FF6600;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>🔧 커스텀 사다리 게임</h1>
+
+  <div>
+    <label>세로줄 수 (3~5):</label>
+    <input type="number" id="lineCount" value="3" min="3" max="5"><br>
+
+    <label>출발지 이름 (쉼표로 구분):</label><br>
+    <input type="text" id="startNames" value="나,너,친구"><br>
+
+    <label>도착지 이름 (쉼표로 구분):</label><br>
+    <input type="text" id="endNames" value="피자,선물,꽝"><br>
+
+    <button onclick="startGame()">게임 시작</button>
+  </div>
+
+  <div id="buttons"></div>
+  <pre id="ladderView"></pre>
+  <div class="result" id="result"></div>
+
+  <script>
+    let ladder = [];
+    let finalOrder = [];
+
+    function generateLadder(height, width) {
+      const ladder = [];
+      for (let i = 0; i < height; i++) {
+        const row = new Array(width - 1).fill(false);
+        if (width > 1 && Math.random() < 0.6) {
+          const idx = Math.floor(Math.random() * (width - 1));
+          row[idx] = true;
+        }
+        ladder.push(row);
+      }
+      return ladder;
+    }
+
+    function shuffle(array) {
+      for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+      }
+    }
+
+    function drawLadder(ladder, startIdx, width, startNames, endNames) {
+      let pos = startIdx;
+      let display = "";
+
+      for (let i = 0; i < ladder.length; i++) {
+        for (let j = 0; j < width; j++) {
+          display += "|";
+          if (j < width - 1) {
+            display += ladder[i][j] ? "---" : "   ";
+          }
+        }
+        display += "|\n";
+
+        if (pos < width - 1 && ladder[i][pos]) pos++;
+        else if (pos > 0 && ladder[i][pos - 1]) pos--;
+      }
+
+      let startLine = startNames.map((name, i) => ` ${name} `).join(" ");
+      let endLine = finalOrder.map((name, i) => ` ${name} `).join(" ");
+
+      return {
+        text: display + "\n" + startLine + "\n" + endLine,
+        result: finalOrder[pos]
+      };
+    }
+
+    function startGame() {
+      let width = parseInt(document.getElementById("lineCount").value);
+      if (width < 3 || width > 5) {
+        alert("세로줄 수는 3~5 사이여야 해!");
+        return;
+      }
+
+      let startNames = document.getElementById("startNames").value.split(",");
+      let endNames = document.getElementById("endNames").value.split(",");
+
+      if (startNames.length !== width || endNames.length !== width) {
+        alert(`출발지/도착지 이름의 개수는 세로줄 수 (${width})와 같아야 해!`);
+        return;
+      }
+
+      // 버튼 만들기
+      const buttonArea = document.getElementById("buttons");
+      buttonArea.innerHTML = "";
+      startNames.forEach((name, i) => {
+        const btn = document.createElement("button");
+        btn.innerText = name.trim();
+        btn.onclick = () => runGame(i, width, startNames, endNames);
+        buttonArea.appendChild(btn);
+      });
+
+      // 도착지 섞기 + 사다리 생성
+      finalOrder = [...endNames];
+      shuffle(finalOrder);
+      ladder = generateLadder(6, width);
+
+      // 초기화
+      document.getElementById("ladderView").innerText = "";
+      document.getElementById("result").innerText = "";
+    }
+
+    function runGame(index, width, startNames, endNames) {
+      const resultObj = drawLadder(ladder, index, width, startNames, endNames);
+      document.getElementById("ladderView").innerText = resultObj.text;
+      document.getElementById("result").innerText = `🎉 결과: ${resultObj.result}`;
+    }
+  </script>
+
+</body>
+</html>
